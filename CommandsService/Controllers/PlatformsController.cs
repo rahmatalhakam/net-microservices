@@ -14,7 +14,7 @@ namespace CommandsService.Controllers
   public class PlatformsController : ControllerBase
   {
     private readonly ICommandRepo _repository;
-    public IMapper _mapper { get; }
+    public readonly IMapper _mapper;
 
     public PlatformsController(ICommandRepo repository, IMapper mapper)
     {

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: platformservice
-        image: rahmatalhakam/platformservice:0.1
+        image: rahmatalhakam/platformservice:latest
         resources:
           limits:
             memory: "128Mi"

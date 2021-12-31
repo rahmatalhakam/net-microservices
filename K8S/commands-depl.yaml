@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: commandservice
-        image: rahmatalhakam/commandservice:0.1
+        image: rahmatalhakam/commandservice:latest
         resources:
           limits:
             memory: "128Mi"
