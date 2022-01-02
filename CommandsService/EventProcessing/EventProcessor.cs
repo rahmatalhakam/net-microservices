@@ -1,4 +1,9 @@
+using System;
+using System.Text.Json;
 using AutoMapper;
+using CommandsService.Data;
+using CommandsService.Dto;
+using CommandsService.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CommandsService.EventProcessing
@@ -14,9 +19,61 @@ namespace CommandsService.EventProcessing
       _mapper = mapper;
 
     }
+
+    private EventType DetermineEvent(string notificationMessage)
+    {
+      Console.WriteLine("--> Determining Event");
+      var eventType = JsonSerializer.Deserialize<GenericEventDto>(notificationMessage);
+      switch (eventType.Event)
+      {
+        case "Platform_Published":
+          Console.WriteLine("Platform Published Event Detected");
+          return EventType.PlatformPublished;
+        default:
+          Console.WriteLine("--> could not determine the event type");
+          return EventType.Undetermined;
+
+      }
+    }
     public void ProcessEvent(string message)
     {
-
+      var eventType = DetermineEvent(message);
+      switch (eventType)
+      {
+        case EventType.PlatformPublished:
+          addPlatform(message);
+          break;
+        default:
+          break;
+      }
+    }
+    private void addPlatform(string platformPublishedMessage)
+    {
+      // terus berjalan dari messagebus
+      using (var scope = _scopeFactory.CreateScope())
+      {
+        var repo = scope.ServiceProvider.GetRequiredService<ICommandRepo>();
+        var platformPublishedDto = JsonSerializer
+            .Deserialize<PlatformPublishedDto>(platformPublishedMessage);
+        try
+        {
+          var plat = _mapper.Map<Platform>(platformPublishedDto);
+          if (!repo.ExeternalPlatformExist(plat.ExternalID))
+          {
+            repo.CreatePlatform(plat);
+            repo.SaveChanges();
+            Console.WriteLine("--> Platform added !");
+          }
+          else
+          {
+            Console.WriteLine("--> Platform already exist");
+          }
+        }
+        catch (System.Exception ex)
+        {
+          Console.WriteLine($"--> Could not add platform to DB {ex.Message}");
+        }
+      }
     }
   }
   enum EventType
